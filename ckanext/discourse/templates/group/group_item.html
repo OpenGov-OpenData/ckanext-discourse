@@ -1,0 +1,12 @@
+{% ckan_extends %}
+{% block datasets %}
+  {{ super() }}
+  {% block discourse_comments_count %}
+  {{ group.display_name }}
+       {% set discourse_title = [group.display_name, " -"] %}
+       {% set title_search =  discourse_title|join %}
+       {% if h.discourse_comments_count(title_search) > 0 %}
+          <a href="{{ url }}about#discourse-comments" class="label" data-format="comment"><img src="/img/noun-comment-white.png">{{ h.discourse_comments_count(title_search) }}</a>
+       {% endif %}
+  {% endblock %}
+{% endblock %}

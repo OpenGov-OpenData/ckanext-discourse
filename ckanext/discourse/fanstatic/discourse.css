@@ -1,0 +1,11 @@
+.label[data-format=comment],
+.label[data-format*=comment] {
+  background-color: #6e9887;
+}
+
+.ztop-comment {
+	position:relative;
+	left:0px;
+	right:0px;
+	z-index:999;
+}

@@ -1,0 +1,5 @@
+{% ckan_extends %}
+{% block group_extras %}
+  {{ super() }}
+  {{ h.discourse_comments() }}
+{% endblock %}

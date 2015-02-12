@@ -1,0 +1,13 @@
+{% ckan_extends %}
+{% block datasets %}
+  {{ super() }}
+  {% block discourse_comments_count %}
+  	   {% set discourse_title = [organization.display_name, " - Organizations -"] %}
+  	   {% set title_search =  discourse_title|join %}
+       {% if h.discourse_comments_count(title_search) > 0 %}
+          {% set temp_var = ["/organization/about/",organization.display_name|lower,"#discourse-comments"] %}
+          {% set organization_comment_url = temp_var|join %}
+       	  <a href="{{ organization_comment_url|replace(" ", "-") }}" class="label" data-format="comment"><img src="/img/noun-comment-white.png" class="ztop-comment">{{ h.discourse_comments_count(title_search) }}</a>
+       {% endif %}
+  {% endblock %}
+{% endblock %}
