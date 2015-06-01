@@ -75,15 +75,13 @@ class DiscoursePlugin(plugins.SingletonPlugin):
 		topic_lookup_dict = dict()
 
 		try:
-			#r = requests.get(cls.discourse_url + cls.discourse_API_package_list_call, verify=False)
-			r = requests.get('https://talk.beta.nyc/c/8/6.json', verify=False)
+			r = requests.get(cls.discourse_url + cls.discourse_API_package_list_call, verify=False)
 			category_dict = r.json()
 			topics_dict = category_dict['topic_list']['topics']
 			cls.active_conversations = 0
 
 			for topic in topics_dict:
 				topic_title = topic['title'][:-len(cls.discourse_topic_suffix)].strip() if topic['title'].endswith(cls.discourse_topic_suffix) else topic['title']
-				#topic_lookup_dict[topic_title] = topic['posts_count']
 				if topic['posts_count'] > 1:
 					cls.active_conversations += 1
 					topic_lookup_dict[topic_title] = topic['posts_count']
@@ -97,20 +95,16 @@ class DiscoursePlugin(plugins.SingletonPlugin):
 
 				for topic in topics_dict:
 					topic_title = topic['title'][:-len(cls.discourse_topic_suffix)].strip() if topic['title'].endswith(cls.discourse_topic_suffix) else topic['title']
-					#topic_lookup_dict[topic_title] = topic['posts_count']
 					if topic['posts_count'] > 1:
 						cls.active_conversations += 1
 						topic_lookup_dict[topic_title] = topic['posts_count']
 
 			cls.next_sync = time.time() + cls.discourse_count_cache_age
 		except:
-			# dont try again immediately, next sync attempt at least 10 seconds from now
+			# dont try again immediately, next sync attempt at least 60 seconds from now
 			cls.next_sync = time.time() + 60
-			#return sys.exc_info()[0]
-			#return -1
 
 		cls.topic_lookup_dict = topic_lookup_dict
-		#return list(topic_lookup_dict.keys())
 		return cls.active_conversations
 
 
