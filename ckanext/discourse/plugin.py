@@ -3,6 +3,10 @@ import ckan.plugins.toolkit as toolkit
 import requests
 import time
 import sys
+import re
+import pylons
+import json
+from pylons import config
 
 class DiscoursePlugin(plugins.SingletonPlugin):
     """
@@ -47,6 +51,7 @@ class DiscoursePlugin(plugins.SingletonPlugin):
 		self.__class__.site_title = site_title
 		self.__class__.next_sync = time.time() + discourse_count_cache_age
 		self.__class__.topic_lookup_dict = dict()
+		self.__class__.active_conversations = 0
 		self.__class__.discourse_sync()
 
 
@@ -65,34 +70,52 @@ class DiscoursePlugin(plugins.SingletonPlugin):
 		"""
 
 		if time.time() < cls.next_sync and len(cls.topic_lookup_dict.keys()) > 0:
-			return
+			return cls.active_conversations
 
 		topic_lookup_dict = dict()
 
 		try:
-			#r = requests.get(cls.discourse_url + cls.discourse_API_package_list_call, verify=FALSE)
+			#r = requests.get(cls.discourse_url + cls.discourse_API_package_list_call, verify=False)
 			r = requests.get('https://talk.beta.nyc/c/8/6.json', verify=False)
 			category_dict = r.json()
 			topics_dict = category_dict['topic_list']['topics']
+			cls.active_conversations = 0
 
 			for topic in topics_dict:
 				topic_title = topic['title'][:-len(cls.discourse_topic_suffix)].strip() if topic['title'].endswith(cls.discourse_topic_suffix) else topic['title']
-				topic_lookup_dict[topic_title] = topic['posts_count']
+				#topic_lookup_dict[topic_title] = topic['posts_count']
+				if topic['posts_count'] > 1:
+					cls.active_conversations += 1
+					topic_lookup_dict[topic_title] = topic['posts_count']
+
+			while 'more_topics_url' in category_dict['topic_list']:
+				more_url = cls.discourse_url + category_dict['topic_list']['more_topics_url']
+				more_url = more_url.replace("?category_id", ".json?category_id")
+				r = requests.get(more_url, verify=False)
+				category_dict = r.json()
+				topics_dict = category_dict['topic_list']['topics']
+
+				for topic in topics_dict:
+					topic_title = topic['title'][:-len(cls.discourse_topic_suffix)].strip() if topic['title'].endswith(cls.discourse_topic_suffix) else topic['title']
+					#topic_lookup_dict[topic_title] = topic['posts_count']
+					if topic['posts_count'] > 1:
+						cls.active_conversations += 1
+						topic_lookup_dict[topic_title] = topic['posts_count']
 
 			cls.next_sync = time.time() + cls.discourse_count_cache_age
 		except:
 			# dont try again immediately, next sync attempt at least 10 seconds from now
-			cls.next_sync = time.time() + 10
+			cls.next_sync = time.time() + 60
 			#return sys.exc_info()[0]
-			return -1
+			#return -1
 
 		cls.topic_lookup_dict = topic_lookup_dict
 		#return list(topic_lookup_dict.keys())
-		return len(topic_lookup_dict.keys())
+		return cls.active_conversations
 
 
     @classmethod
-    def discourse_comments(cls):
+    def discourse_comments(cls, canonical_url = ''):
 	''' Adds Discourse comments to the page.'''
 	# we need to create a topic_id
 	c = plugins.toolkit.c
@@ -100,19 +123,41 @@ class DiscoursePlugin(plugins.SingletonPlugin):
 		topic_id = c.controller
 		if topic_id == 'package':
 			topic_id = 'dataset'
+
 		if c.id:
 			topic_id += '/' + c.id
 		elif c.current_package_id:
-			topic_id += '/' + c.current_package_id
+			# we do this so we always tie the same comment even if the url is canonical hash
+			# or human-readable version
+			pkg_dict = plugins.toolkit.c.__getattr__("pkg_dict")
+			topic_id += '/' + pkg_dict["name"]
 		else:
 			# cannot make a topic_id
 			topic_id = ''
-		# special case
+
 		if c.action == 'resource_read':
 			topic_id = 'dataset-resource::' + c.resource_id
 	except:
 		topic_id = ''
-	data = {'topic_id' : cls.site_url + topic_id,
+
+	if canonical_url:
+		discourse_topic = canonical_url
+	else:
+		discourse_topic = cls.site_url + topic_id
+
+	# ignore locale settings
+	lang_code = pylons.request.environ['CKAN_LANG']
+
+	monolingualURL = re.match('(http://.*?/)('+ lang_code +')/(.*)$', discourse_topic)
+	if monolingualURL is not None:
+		# we strip language code from URL
+		discourse_topic = monolingualURL.group(1) + monolingualURL.group(3)
+	else: 
+		monolingualURL = re.match('(http://.*?/)(..)/(.*)$', discourse_topic)
+		if monolingualURL is not None:
+			discourse_topic = monolingualURL.group(1) + monolingualURL.group(3)
+
+	data = {'topic_id' : discourse_topic,
 		'discourse_url' : cls.discourse_url,
 		'discourse_username' : cls.discourse_username }
 	return plugins.toolkit.render_snippet('discourse_comments.html', data)

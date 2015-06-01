@@ -1,0 +1,12 @@
+{% ckan_extends %}
+{% block package_item_content %}
+  {{ super() }}
+  {% block discourse_comments_count %}
+       {% set discourse_title = ["Data Request: ", title] %}
+       {% set title_search =  discourse_title|join %}
+       {% if h.discourse_comments_count(title_search) > 0 %}
+       <ul class="dataset-resources unstyled">
+      <li><a href="{{ h.url_for(controller='ckanext.datarequests.controllers.ui_controller:DataRequestsUI', action='show', id=datarequest.get('id', '')) }}#discourse-comments" class="label" data-format="comment"><img src="/img/noun-comment-white.png">{{ h.discourse_comments_count(title_search) }}</a></li></ul>
+       {% endif %}
+  {% endblock %}
+{% endblock %}
