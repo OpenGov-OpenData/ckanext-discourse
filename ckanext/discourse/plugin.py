@@ -23,10 +23,9 @@ class DiscoursePlugin(plugins.SingletonPlugin):
 		to the plugin to read custom options.
 		"""
 		discourse_url = config.get('discourse.url', None)
-		discourse_embed_url = config.get('discourse.embedurl', None)
 		discourse_username = config.get('discourse.username', None)
 		discourse_count_cache_age = config.get('discourse.count_cache_age', 300)
-		discourse_API_package_list_call = config.get('discourse.API_package_list_call', None)
+		discourse_ckan_category = config.get('discourse.ckan_category', None)
 		discourse_topic_suffix = config.get('discourse.topic_suffix', None)
 		site_url = config.get('ckan.site_url', None)
 		site_title = config.get('ckan.site_title', None)
@@ -36,16 +35,15 @@ class DiscoursePlugin(plugins.SingletonPlugin):
 		if site_url is None:
 			log.warn("Discourse needs ckan.site_url set to work. Please set \
 			'ckan.site_url' in your .ini (NOTE: No trailing slash)!")
-		if discourse_API_package_list_call is None:
-			log.warn("Discourse needs discourse.API_package_list_call set to work. Please set \
-			'discourse.API_package_list_call' in your .ini!")
+		if discourse_ckan_category is None:
+			log.warn("Discourse needs discourse.ckan_category set to work. Please set \
+			'discourse.ckan_category' in your .ini!")
 		config['pylons.app_globals'].has_commenting = True
 		# store these so available to class methods
 		self.__class__.discourse_url = discourse_url
-		self.__class__.discourse_embed_url = discourse_embed_url
 		self.__class__.discourse_username = discourse_username
 		self.__class__.discourse_count_cache_age = discourse_count_cache_age
-		self.__class__.discourse_API_package_list_call = discourse_API_package_list_call
+		self.__class__.discourse_ckan_category = discourse_ckan_category
 		self.__class__.discourse_topic_suffix = discourse_topic_suffix
 		self.__class__.site_url = site_url
 		self.__class__.site_title = site_title
@@ -75,7 +73,7 @@ class DiscoursePlugin(plugins.SingletonPlugin):
 		topic_lookup_dict = dict()
 
 		try:
-			r = requests.get(cls.discourse_url + cls.discourse_API_package_list_call, verify=False)
+			r = requests.get(cls.discourse_url + cls.discourse_ckan_category, verify=False)
 			category_dict = r.json()
 			topics_dict = category_dict['topic_list']['topics']
 			cls.active_conversations = 0
