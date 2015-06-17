@@ -122,7 +122,7 @@ class DiscoursePlugin(plugins.SingletonPlugin):
 			# we do this so we always tie the same comment even if the url is canonical hash
 			# or human-readable version
 			pkg_dict = plugins.toolkit.c.__getattr__("pkg_dict")
-			topic_id += '/' + pkg_dict["name"]
+			topic_id += '/' + pkg_dict["id"]
 		else:
 			# cannot make a topic_id
 			topic_id = ''
