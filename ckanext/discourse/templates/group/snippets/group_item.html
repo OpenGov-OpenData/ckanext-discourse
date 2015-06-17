@@ -3,7 +3,7 @@
   {{ super() }}
   {% block discourse_comments_count %}
        {% set discourse_title = [group.display_name, " -"] %}
-  	   {% set title_search =  discourse_title|join %}
+       {% set title_search =  discourse_title|join %}
        {% if h.discourse_comments_count(title_search) > 0 %}
           {% set temp_var = ["/group/about/",group.display_name|lower,"#discourse-comments"] %}
           {% set group_comment_url = temp_var|join %}
