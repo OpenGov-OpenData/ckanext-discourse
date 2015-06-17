@@ -40,7 +40,7 @@ class DiscoursePlugin(plugins.SingletonPlugin):
 			'discourse.ckan_category' in your .ini!")
 		config['pylons.app_globals'].has_commenting = True
 		# store these so available to class methods
-		self.__class__.discourse_url = discourse_url
+		self.__class__.discourse_url = discourse_url.rstrip('/') + '/'
 		self.__class__.discourse_username = discourse_username
 		self.__class__.discourse_count_cache_age = discourse_count_cache_age
 		self.__class__.discourse_ckan_category = discourse_ckan_category
@@ -135,7 +135,7 @@ class DiscoursePlugin(plugins.SingletonPlugin):
 	if canonical_url:
 		discourse_topic = canonical_url
 	else:
-		discourse_topic = cls.site_url + topic_id
+		discourse_topic = cls.site_url.rstrip('/') + '/' + topic_id
 
 	# ignore locale settings
 	lang_code = pylons.request.environ['CKAN_LANG']
