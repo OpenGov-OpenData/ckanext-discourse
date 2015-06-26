@@ -4,8 +4,8 @@
 }
 
 .ztop-comment {
-	position:relative;
-	left:0px;
-	right:0px;
-	z-index:999;
+  position:relative;
+  left:0px;
+  right:0px;
+  z-index:999;
 }
