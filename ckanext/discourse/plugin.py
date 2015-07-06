@@ -34,18 +34,34 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         discourse_topic_suffix = config.get('discourse.topic_suffix', None)
         site_url = config.get('ckan.site_url', None)
         site_title = config.get('ckan.site_title', None)
+
         if discourse_url is None:
             log.warn("No discourse forum name is set. Please set \
             'discourse.url' in your .ini!")
+        else:
+            discourse_url = discourse_url.rstrip('/') + '/'
+
         if site_url is None:
             log.warn("Discourse needs ckan.site_url set to work. Please set \
             'ckan.site_url' in your .ini (NOTE: No trailing slash)!")
         if discourse_ckan_category is None:
             log.warn("Discourse needs discourse.ckan_category set to work. Please set \
             'discourse.ckan_category' in your .ini!")
+        elif not discourse_ckan_category.lower().endswith('.json'):
+            discourse_ckan_category += '.json'
+
+        # check for valid JSON
+        try:
+            discourse_api = discourse_url + discourse_ckan_category
+            r = requests.get(discourse_api, verify=False)
+            test_category_dict = r.json()
+        except:
+            log.warn(discouse_api + " is not a valid Discourse JSON endpoint!")
+
         config['pylons.app_globals'].has_commenting = True
+
         # store these so available to class methods
-        self.__class__.discourse_url = discourse_url.rstrip('/') + '/'
+        self.__class__.discourse_url = discourse_url
         self.__class__.discourse_username = discourse_username
         self.__class__.discourse_count_cache_age = discourse_count_cache_age
         self.__class__.discourse_ckan_category = discourse_ckan_category
