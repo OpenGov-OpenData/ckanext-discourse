@@ -40,6 +40,8 @@ This plugin also supports [ckanext-datarequests](https://github.com/conwetlab/ck
     * embeddable hosts: Add the domain (without the http:// bit) of your CKAN instance (e.g. data.myorg.com)
     * embed by username: Name of the user that you created on step 2 (e.g. portaldatabot)
     * embed category: Name of the category that you created on step 3 (e.g. Open Data Portal Datasets)
+    
+5. Configure Oneboxing. Go to "Admin" > "Settings" > "Onebox".  Be sure the CKAN domain is in the whitelist. Oneboxing allows users to create a Onebox preview from CKAN URLs.  To create a CKAN onebox in Discourse, just insert a CKAN URL in its own line and one will be created automatically. (Demo [here](https://talk.beta.nyc/t/data-beta-nyc-ckan-customizations))
 
 
 ## Setup CKAN
