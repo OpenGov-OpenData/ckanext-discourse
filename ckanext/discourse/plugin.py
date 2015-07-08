@@ -6,8 +6,8 @@ import sys
 import re
 import pylons
 import json
-from pylons import config
 from ckan.plugins.toolkit import asbool
+from ckan.common import g
 
 import logging
 
@@ -32,9 +32,6 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         discourse_username = config.get('discourse.username', None)
         discourse_count_cache_age = config.get('discourse.count_cache_age', 300)
         discourse_ckan_category = config.get('discourse.ckan_category', None)
-        discourse_topic_suffix = config.get('discourse.topic_suffix', None)
-        site_url = config.get('ckan.site_url', None)
-        site_title = config.get('ckan.site_title', None)
         discourse_debug = asbool(config.get('discourse.debug', False))
 
         if discourse_url is None:
@@ -43,9 +40,6 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         else:
             discourse_url = discourse_url.rstrip('/') + '/'
 
-        if site_url is None:
-            log.warn("Discourse needs ckan.site_url set to work. Please set \
-            'ckan.site_url' in your .ini (NOTE: No trailing slash)!")
         if discourse_ckan_category is None:
             log.warn("Discourse needs discourse.ckan_category set to work. Please set \
             'discourse.ckan_category' in your .ini!")
@@ -67,12 +61,9 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         self.__class__.discourse_username = discourse_username
         self.__class__.discourse_count_cache_age = discourse_count_cache_age
         self.__class__.discourse_ckan_category = discourse_ckan_category
-        self.__class__.discourse_topic_suffix = discourse_topic_suffix
-        self.__class__.site_url = site_url
-        self.__class__.site_title = site_title
         self.__class__.discourse_debug = discourse_debug
         self.__class__.next_sync = time.time() + discourse_count_cache_age
-        self.__class__.topic_lookup_dict = dict()
+        self.__class__.topic_lookup_dict = {}
         self.__class__.active_conversations = 0
         self.__class__.discourse_sync()
 
@@ -103,7 +94,7 @@ class DiscoursePlugin(plugins.SingletonPlugin):
             cls.active_conversations = 0
 
             for topic in topics_dict:
-                topic_title = topic['title'][:-len(cls.discourse_topic_suffix)].strip() if topic['title'].endswith(cls.discourse_topic_suffix) else topic['title']
+                topic_title = topic['title'][:-len(g.site_title)].strip() if topic['title'].endswith(g.site_title) else topic['title']
                 if topic['posts_count'] > 1:
                     cls.active_conversations += 1
                     topic_lookup_dict[topic_title] = topic['posts_count']
@@ -116,7 +107,7 @@ class DiscoursePlugin(plugins.SingletonPlugin):
                 topics_dict = category_dict['topic_list']['topics']
 
                 for topic in topics_dict:
-                    topic_title = topic['title'][:-len(cls.discourse_topic_suffix)].strip() if topic['title'].endswith(cls.discourse_topic_suffix) else topic['title']
+                    topic_title = topic['title'][:-len(g.site_title)].strip() if topic['title'].endswith(g.site_title) else topic['title']
                     if topic['posts_count'] > 1:
                         cls.active_conversations += 1
                         topic_lookup_dict[topic_title] = topic['posts_count']
@@ -160,7 +151,7 @@ class DiscoursePlugin(plugins.SingletonPlugin):
                 topic_id = ''
 
             if topic_id:
-                discourse_topic = cls.site_url.rstrip('/') + '/' + topic_id
+                discourse_topic = g.site_url.rstrip('/') + '/' + topic_id
             else:
                 return ''
         else:
