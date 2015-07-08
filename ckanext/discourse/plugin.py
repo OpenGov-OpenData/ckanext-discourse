@@ -7,6 +7,7 @@ import re
 import pylons
 import json
 from pylons import config
+from ckan.plugins.toolkit import asbool
 
 import logging
 
@@ -34,6 +35,7 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         discourse_topic_suffix = config.get('discourse.topic_suffix', None)
         site_url = config.get('ckan.site_url', None)
         site_title = config.get('ckan.site_title', None)
+        discourse_debug = asbool(config.get('discourse.debug', False))
 
         if discourse_url is None:
             log.warn("No discourse forum name is set. Please set \
@@ -68,6 +70,7 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         self.__class__.discourse_topic_suffix = discourse_topic_suffix
         self.__class__.site_url = site_url
         self.__class__.site_title = site_title
+        self.__class__.discourse_debug = discourse_debug
         self.__class__.next_sync = time.time() + discourse_count_cache_age
         self.__class__.topic_lookup_dict = dict()
         self.__class__.active_conversations = 0
@@ -132,31 +135,36 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         ''' Adds Discourse comments to the page.'''
         # we need to create a topic_id
         c = plugins.toolkit.c
-        try:
-            topic_id = c.controller
-            if topic_id == 'package':
-                topic_id = 'dataset'
+        pkg_dict = {}
 
-            if c.id:
-                topic_id += '/' + c.id
-            elif c.current_package_id:
-                # we do this so we always tie the same comment even if the url is canonical hash
-                # or human-readable version
+        if not canonical_url:
+            try:
+                topic_id = c.controller
+                if topic_id == 'package':
+                    topic_id = 'dataset'
+
                 pkg_dict = plugins.toolkit.c.__getattr__("pkg_dict")
-                topic_id += '/' + pkg_dict["id"]
-            else:
-                # cannot make a topic_id
+
+                # we do this so we always tie the same comment even if the url is canonical hash
+                # or human-readable version.  This is necessary since the CKAN RSS feed uses hash
+                # resulting in duplicate discourse topics for the same dataset
+                topic_id += '/' + pkg_dict["name"]
+
+                # Only create topics for publicly available CKAN URLs
+                if pkg_dict["private"]:
+                    topic_id = ''
+
+                if c.action == 'resource_read':
+                    topic_id = 'dataset-resource::' + c.resource_id
+            except:
                 topic_id = ''
 
-            if c.action == 'resource_read':
-                topic_id = 'dataset-resource::' + c.resource_id
-        except:
-            topic_id = ''
-
-        if canonical_url:
-            discourse_topic = canonical_url
+            if topic_id:
+                discourse_topic = cls.site_url.rstrip('/') + '/' + topic_id
+            else:
+                return ''
         else:
-            discourse_topic = cls.site_url.rstrip('/') + '/' + topic_id
+            discourse_topic = canonical_url
 
         # ignore locale settings
         lang_code = pylons.request.environ['CKAN_LANG']
@@ -173,7 +181,13 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         data = {'topic_id' : discourse_topic,
             'discourse_url' : cls.discourse_url,
             'discourse_username' : cls.discourse_username }
-        return plugins.toolkit.render_snippet('discourse_comments.html', data)
+
+        if cls.discourse_debug:
+            data['pkg_dict'] = json.dumps(pkg_dict, indent=3)
+            comments_snippet = 'discourse_comments_debug.html'
+        else:
+            comments_snippet = 'discourse_comments.html'
+        return plugins.toolkit.render_snippet(comments_snippet, data)
 
     @classmethod
     def discourse_latest(cls, num_comments=5):
