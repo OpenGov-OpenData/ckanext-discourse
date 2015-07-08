@@ -1,5 +1,5 @@
 {% ckan_extends %}
 {% block group_extras %}
   {{ super() }}
-  {{ h.discourse_comments() }}
+  {{ h.discourse_comments( h.full_current_url() ) }}
 {% endblock %}
