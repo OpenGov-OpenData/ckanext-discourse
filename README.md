@@ -1,7 +1,5 @@
 ## How it works
 
-TODO: expand
-
 A new topic is created in the Discourse forum (in a designated Category) for each dataset, organization, and group in the CKAN site.
 This will happen automatically the first time someone visits the CKAN dataset, org and group page and starts a discussion. Topic reply counts are also displayed in the appropriate listing pages.
 
