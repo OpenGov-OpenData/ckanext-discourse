@@ -52,7 +52,7 @@ class DiscoursePlugin(plugins.SingletonPlugin):
             r = requests.get(discourse_api, verify=False)
             test_category_dict = r.json()
         except:
-            log.warn(discouse_api + " is not a valid Discourse JSON endpoint!")
+            log.warn(discourse_api + " is not a valid Discourse JSON endpoint!")
 
         config['pylons.app_globals'].has_commenting = True
 
