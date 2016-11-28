@@ -7,7 +7,7 @@ This plugin also supports [ckanext-datarequests](https://github.com/conwetlab/ck
 
 ## Setup Discourse
 
-1. Install Discourse.
+1. Install Discourse (v1.6+)
 
     The recommended way is to use the official Docker image following [these instructions](https://github.com/discourse/discourse/blob/master/docs/INSTALL-cloud.md), but read below first.
 
@@ -35,19 +35,21 @@ This plugin also supports [ckanext-datarequests](https://github.com/conwetlab/ck
 
 3. Create a new Discourse Category. This will contain all topics created for each CKAN dataset. To do so, go to the homepage and click on "Categories" > "New Category". Enter a name and optionally the slug for your category.  After creating a Category, go to the Category page and take note of the URL.  You will need this to setup ckanext-discourse.
 
-4. Configure Embbedding. Go to "Admin" > "Settings" > "Embedding". You must fill up the following fields:
+4. Configure Embbedding. Go to "Admin" > "Customize" > "Embedding". You must fill up the following fields:
 
-    * embeddable hosts: Add the domain (without the http:// bit) of your CKAN instance (e.g. data.myorg.com)
-    * embed by username: Name of the user that you created on step 2 (e.g. portaldatabot)
-    * embed category: Name of the category that you created on step 3 (e.g. Open Data Portal Datasets)
+    * Allowed Hosts: Add the domain (without the http:// bit) of your CKAN instance (e.g. data.myorg.com)
+    * Post to Category: Name of the category that you created on step 3 (e.g. Open Data Portal Datasets)
+    * Embedding Settings. Username for topic creation: Name of the user that you created on step 2 (e.g. portaldatabot)
     
-5. Configure Oneboxing. Go to "Admin" > "Settings" > "Onebox".  Be sure the CKAN domain is in the whitelist. Oneboxing allows users to create a Onebox preview from CKAN URLs.  To create a CKAN onebox in Discourse, just insert a CKAN URL in its own line and one will be created automatically. (Demo [here](https://talk.beta.nyc/t/data-beta-nyc-ckan-customizations))
+5. Configure Oneboxing. Go to "Admin" > "Settings" > "Onebox".  Oneboxing allows users to create a Onebox preview from CKAN URLs.  To create a CKAN onebox in Discourse, just insert a CKAN URL in its own line and one will be created automatically. (Demo [here](https://talk.beta.nyc/t/data-beta-nyc-ckan-customizations))
 
 
 ## Setup CKAN
 
-1. Install ckanext-discourse. Activate your virtualenv and run:
+1. Install ckanext-discourse.
 
+        . /usr/lib/ckan/default/bin/activate
+        cd /usr/lib/ckan/default/src/ckan 
         git clone https://github.com/okfn/ckanext-discourse.git
         cd ckanext-discourse
         python setup.py develop
