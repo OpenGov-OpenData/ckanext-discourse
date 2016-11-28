@@ -2,6 +2,6 @@
 {% block primary_content_inner %}
   {{ super() }}
   {% block discourse_comments %}
-    {{ h.discourse_comments() }}
+    {{ h.discourse_comments(h.full_current_url()) }}
   {% endblock %}
 {% endblock %}
