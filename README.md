@@ -49,8 +49,8 @@ This plugin also supports [ckanext-datarequests](https://github.com/conwetlab/ck
 1. Install ckanext-discourse.
 
         . /usr/lib/ckan/default/bin/activate
-        cd /usr/lib/ckan/default/src/ckan 
-        git clone https://github.com/okfn/ckanext-discourse.git
+        cd /usr/lib/ckan/default/src
+        git clone https://github.com/ontodia/ckanext-discourse
         cd ckanext-discourse
         python setup.py develop
 
