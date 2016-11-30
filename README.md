@@ -42,7 +42,9 @@ To create a new user, go to "Admin" > "Users" > "Send Invites" and enter an emai
     * Allowed Hosts: Add the domain (without the http:// bit) of your CKAN instance (e.g. data.myorg.com)
     * Post to Category: Name of the category that you created on step 3 (e.g. Open Data Portal Datasets)
     * Embedding Settings: Username for topic creation: Name of the user that you created on step 2 (e.g. databot)
-    * Crawler Settings: CSS selector for elements that are removed from embeds - ".ckanext-showcase-launch, .discourse-content, .social, .nums, .follow_button"
+    * Crawler Settings: 
+      * CSS selector for elements that are __allowed in embeds__ - `".module-content"`
+      * CSS selector for elements that are __removed from embeds__ - `".ckanext-showcase-launch, .discourse-content, .social, .nums, .follow_button"`
     
 5. Configure Oneboxing. Go to "Admin" > "Settings" > "Onebox".  Oneboxing allows users to create a Onebox preview from CKAN URLs.  To create a CKAN onebox in Discourse, just insert a CKAN URL in its own line and one will be created automatically. (Demo [here](https://talk.beta.nyc/t/data-beta-nyc-ckan-customizations))
 
