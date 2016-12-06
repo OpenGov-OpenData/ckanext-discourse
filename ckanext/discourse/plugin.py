@@ -30,7 +30,7 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         """
         discourse_url = config.get('discourse.url', None)
         discourse_username = config.get('discourse.username', None)
-        discourse_count_cache_age = config.get('discourse.count_cache_age', 300)
+        discourse_count_cache_age = config.get('discourse.count_cache_age', 60)
         discourse_ckan_category = config.get('discourse.ckan_category', None)
         discourse_debug = asbool(config.get('discourse.debug', False))
 

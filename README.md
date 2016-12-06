@@ -70,6 +70,7 @@ To create a new user, go to "Admin" > "Users" > "Send Invites" and enter an emai
         discourse.url = http://datatalk.myorg.com
         discourse.username = databot
         discourse.ckan_category = c/open-data-talk
+        discourse_count_cache_age = 60
         discourse.debug = false
 
    __discourse.url__: the url of your Discourse instance.  Be sure to specify the full url.  https is supported.
@@ -77,5 +78,7 @@ To create a new user, go to "Admin" > "Users" > "Send Invites" and enter an emai
    __discourse.username__: the discourse username created earlier.
    
    __discourse.ckan_category__: appended to the discourse.url to get the full URL of the discourse category JSON.  In this example, the webpage for the Discourse CKAN category is http://datatalk.myorg.com/c/open-data-talk.  The plugin automatically adds the ".json" file suffix (i.e. http://datatalk.myorg.com/c/open-data-talk.json) to get the JSON file required to talk to the [Discourse API](https://meta.discourse.org/t/discourse-api-documentation/22706/6).
+
+   __discourse_count_cache_age__: how often to talk to the the Discourse API in seconds. 
    
    __discourse.debug__: instead of inserting the JS code to embed a Discourse topic, debugging information is displayed instead. This is useful when troubleshooting, as a misconfigured plugin will "spam" your discourse instance with topics that may annoy your users with false-positive discourse notifications.
