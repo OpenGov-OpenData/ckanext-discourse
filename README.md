@@ -82,3 +82,10 @@ To create a new user, go to "Admin" > "Users" > "Send Invites" and enter an emai
    __discourse_count_cache_age__: how often to talk to the the Discourse API in seconds. 
    
    __discourse.debug__: instead of inserting the JS code to embed a Discourse topic, debugging information is displayed instead. This is useful when troubleshooting, as a misconfigured plugin will "spam" your discourse instance with topics that may annoy your users with false-positive discourse notifications.
+
+## Extending the discourse integration
+
+The discourse plugin provides a plugin interface called `IDiscourse`, which enables other extensions to extend the discourse integration.
+Currently only one method is available:
+
+* `before_render_comments`: called before the comments are rendered, please check the source of [`ckanext-discourse/ckanext/discourse/interfaces.py`](https://github.com/OpenGov-OpenData/ckanext-discourse/blob/master/ckanext/dcat/interfaces.py) for detailed information.
