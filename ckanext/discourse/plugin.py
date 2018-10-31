@@ -8,6 +8,7 @@ import pylons
 import json
 from ckan.plugins.toolkit import asbool
 from ckan.common import g
+from ckanext.discourse.interfaces import IDiscourse
 
 import logging
 
@@ -172,6 +173,9 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         data = {'topic_id' : discourse_topic,
             'discourse_url' : cls.discourse_url,
             'discourse_username' : cls.discourse_username }
+
+        for plugin in p.PluginImplementations(IDiscourse):
+            data = plugin.before_render_comments(data, pkg_dict)
 
         if cls.discourse_debug:
             data['pkg_dict'] = json.dumps(pkg_dict, indent=3)
