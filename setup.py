@@ -15,7 +15,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='1.0.0',
+    version='1.1.0',
 
     description='''Discourse extension for CKAN''',
     long_description='',
@@ -24,8 +24,8 @@ setup(
     url='https://github.com/jqnatividad/ckanext-discourse',
 
     # Author details
-    author='''OpenGov''',
-    author_email='''jnatividad@opengov.com''',
+    author='''Joel Natividad''',
+    author_email='''joel.natividad@gmail.com''',
 
     # Choose your license
     license='AGPL',

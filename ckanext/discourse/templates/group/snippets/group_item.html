@@ -2,7 +2,7 @@
 {% block datasets %}
   {{ super() }}
   {% block discourse_comments_count %}
-       {% set discourse_title = ["About - ", group.display_name, " - Groups -"] %}
+       {% set discourse_title = ["About - ", group.display_name, " - Groups - ", g.site_title ] %}
        {% set title_search =  discourse_title|join %}
        {% if h.discourse_comments_count(title_search) > 0 %}
           {% set temp_var = ["/group/about/",group.display_name|lower,"#discourse-comments"] %}

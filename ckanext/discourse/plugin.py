@@ -6,6 +6,7 @@ import sys
 import re
 import pylons
 import json
+import ckan.plugins as p
 from ckan.plugins.toolkit import asbool
 from ckan.common import g
 from ckanext.discourse.interfaces import IDiscourse
@@ -44,12 +45,10 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         if discourse_ckan_category is None:
             log.warn("Discourse needs discourse.ckan_category set to work. Please set \
             'discourse.ckan_category' in your .ini!")
-        elif not discourse_ckan_category.lower().endswith('.json'):
-            discourse_ckan_category += '.json'
 
         # check for valid JSON
         try:
-            discourse_api = discourse_url + discourse_ckan_category
+            discourse_api = discourse_url + discourse_ckan_category + '.json'
             r = requests.get(discourse_api, verify=False)
             test_category_dict = r.json()
         except:
@@ -89,13 +88,13 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         topic_lookup_dict = dict()
 
         try:
-            r = requests.get(cls.discourse_url + cls.discourse_ckan_category, verify=False)
+            r = requests.get(cls.discourse_url + cls.discourse_ckan_category + '.json', verify=False)
             category_dict = r.json()
             topics_dict = category_dict['topic_list']['topics']
             cls.active_conversations = 0
 
             for topic in topics_dict:
-                topic_title = topic['title'][:-len(g.site_title)].strip() if topic['title'].endswith(g.site_title) else topic['title']
+                topic_title = topic['title']
                 if topic['posts_count'] > 1:
                     cls.active_conversations += 1
                     topic_lookup_dict[topic_title] = topic['posts_count']
@@ -108,7 +107,7 @@ class DiscoursePlugin(plugins.SingletonPlugin):
                 topics_dict = category_dict['topic_list']['topics']
 
                 for topic in topics_dict:
-                    topic_title = topic['title'][:-len(g.site_title)].strip() if topic['title'].endswith(g.site_title) else topic['title']
+                    topic_title = topic['title']
                     if topic['posts_count'] > 1:
                         cls.active_conversations += 1
                         topic_lookup_dict[topic_title] = topic['posts_count']
@@ -198,8 +197,14 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         num_comments = cls.topic_lookup_dict.get(topic_id, 1) - 1
         return num_comments
 
+    @classmethod
+    def discourse_category_url(cls):
+        ''' returns Discourse CKAN category URL  '''
+        return cls.discourse_url + cls.discourse_ckan_category
+
     def get_helpers(self):
         return {'discourse_comments' : self.discourse_comments,
                 'discourse_latest' : self.discourse_latest,
                 'discourse_comments_count' : self.discourse_comments_count,
-                'discourse_sync' : self.discourse_sync}
+                'discourse_sync' : self.discourse_sync,
+                'discourse_category_url' : self.discourse_category_url}

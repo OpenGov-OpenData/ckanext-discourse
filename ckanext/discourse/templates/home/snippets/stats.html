@@ -1,0 +1,11 @@
+{% ckan_extends %}
+{% block stats_group %}
+  {% set num_topics = h.discourse_sync() %}
+  {{ super() }}
+  <li>
+  	<a href="{{ h.discourse_category_url() }}" target="_blank">
+  		<strong>{{ h.SI_number_span(num_topics) }}</strong>
+  		{{ _('conversation') if num_topics == 1 else _('conversations') }}
+  	</a>
+  <li>
+{% endblock %}

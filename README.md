@@ -11,29 +11,11 @@ This plugin also supports [ckanext-datarequests](https://github.com/conwetlab/ck
 
     The recommended way is to use the official Docker image following [these instructions](https://github.com/discourse/discourse/blob/master/docs/INSTALL-cloud.md).
 
-    Heads up! There is an extra step not described in Discourse's install instructions. 
-
-    After the `app.yml` is generated and before bootstrapping, edit the `/containers/app.yml` file and add
-    `- git clone https://github.com/TheBunyip/discourse-allow-same-origin.git` to Discourse plugins:
-
-        ```yml
-
-        hooks:
-          after_code:
-            - exec:
-                cd: $home/plugins
-                cmd:
-                  - mkdir -p plugins
-                  - git clone https://github.com/discourse/docker_manager.git
-                  - git clone https://github.com/TheBunyip/discourse-allow-same-origin.git
-        ```
-    Make sure to keep the existing spaces and indentation.
-
     Also make sure to set up Discourse email integration properly before proceeding as its required for account creation and notification.
 
 2. Create a new Discourse user. This will be the user that will create the topics on Discourse for each CKAN entity that has commenting support (currently, commenting is supported on Dataset packages, Organizations, Groups, Showcase Items, Dataset requests). 
 
-To create a new user, go to "Admin" > "Users" > "Send Invites" and enter an email address. You may want to name the user so that its plainly evident its a bot (e.g. [databot](https://talk.beta.nyc/users/databot/activity)).  After creating the bot user, be sure to verify its email so it can post. (TODO: admin, mod?)
+To create a new user, go to "Admin" > "Users" > "Send Invites" and enter an email address. You may want to name the user so that its plainly evident its a bot (e.g. databot).  After creating the bot user, be sure to verify its email so it can post.
 
 3. Create a new Discourse Category. This will contain all topics created for each CKAN dataset. To do so, go to the homepage and click on "Categories" > "New Category". Enter a name and optionally the slug for your category (e.g. Open Data Talk).  After creating a Category, go to the Category page and take note of the URL.  You will need this to setup ckanext-discourse.
 
@@ -46,7 +28,7 @@ To create a new user, go to "Admin" > "Users" > "Send Invites" and enter an emai
       * CSS selector for elements that are __allowed in embeds__ - `".module-content"`
       * CSS selector for elements that are __removed from embeds__ - `".ckanext-showcase-launch, .discourse-content, .social, .nums, .follow_button"`
     
-5. Configure Oneboxing. Go to "Admin" > "Settings" > "Onebox".  Oneboxing allows users to create a Onebox preview from CKAN URLs.  To create a CKAN onebox in Discourse, just insert a CKAN URL in its own line and one will be created automatically. (Demo [here](https://talk.beta.nyc/t/data-beta-nyc-ckan-customizations))
+5. Configure Oneboxing. Go to "Admin" > "Settings" > "Onebox".  Oneboxing allows users to create a Onebox preview from CKAN URLs.  To create a CKAN onebox in Discourse, just insert a CKAN URL in its own line and one will be created automatically.
 
 
 ## Setup CKAN
@@ -55,7 +37,7 @@ To create a new user, go to "Admin" > "Users" > "Send Invites" and enter an emai
 
         . /usr/lib/ckan/default/bin/activate
         cd /usr/lib/ckan/default/src
-        git clone https://github.com/ontodia/ckanext-discourse
+        git clone https://github.com/jqnatividad/ckanext-discourse
         cd ckanext-discourse
         python setup.py develop
 
@@ -63,7 +45,7 @@ To create a new user, go to "Admin" > "Users" > "Send Invites" and enter an emai
 
         ckan.plugins = ... discourse
         
-    If discourse embedding is desired for ckanext-showcase and ckanext-datarequests, be sure to add the discourse plugin after those plugins (i.e. ckan.plugins = ... showcase datarequests discourse) 
+    If discourse embedding is desired for ckanext-showcase and ckanext-datarequests, be sure to add the discourse plugin **before** those plugins (i.e. ckan.plugins = ... discourse showcase datarequests), so it can properly extend their HTML templates with the required discourse embed code.  
 
 3. Add the following options as well:
 
