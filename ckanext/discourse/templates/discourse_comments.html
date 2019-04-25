@@ -1,6 +1,6 @@
 <div class="module-content discourse-content">
-
-  <div id="discourse-comments"></div>
+{#
+  <div id="discourse-comments" style="display:none; height:0; width:0;"></div>
 
 <script type="text/javascript">
   DiscourseEmbed = { discourseUrl: '{{ discourse_url }}',
@@ -12,4 +12,5 @@
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
   })();
 </script>
+#}
 </div>

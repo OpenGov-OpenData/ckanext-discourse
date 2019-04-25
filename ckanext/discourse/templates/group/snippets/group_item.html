@@ -1,6 +1,7 @@
 {% ckan_extends %}
 {% block datasets %}
   {{ super() }}
+{#
   {% block discourse_comments_count %}
        {% set discourse_title = ["About - ", group.display_name, " - Groups - ", g.site_title ] %}
        {% set title_search =  discourse_title|join %}
@@ -10,4 +11,5 @@
           <a href="{{ group_comment_url|replace(" ","-") }}" class="label" data-format="comment"><img src="/img/noun-comment-white.png" class="ztop-comment">{{ h.discourse_comments_count(title_search) }}</a>
        {% endif %}
   {% endblock %}
+#}
 {% endblock %}

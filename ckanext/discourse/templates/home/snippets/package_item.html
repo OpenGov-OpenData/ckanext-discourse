@@ -1,6 +1,7 @@
 {% ckan_extends %}
 {% block resources_inner %}
   {{ super() }}
+{#
   {% block discourse_comments_count %}
        {% set discourse_title = [title, " - Datasets - ", g.site_title ] %}
        {% set title_search =  discourse_title|join %}
@@ -8,4 +9,5 @@
       <li><a href="{{ h.url_for(controller='package', action='read', id=package.name) }}#discourse-comments" class="label" data-format="comment"><img src="/img/noun-comment-white.png">{{ h.discourse_comments_count(title_search) }}</a></li>
        {% endif %}
   {% endblock %}
+#}
 {% endblock %}

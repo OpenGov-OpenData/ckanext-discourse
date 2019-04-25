@@ -1,5 +1,6 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
+import ckan.logic as logic
 import requests
 import time
 import sys
@@ -8,13 +9,18 @@ import pylons
 import json
 import ckan.plugins as p
 from ckan.plugins.toolkit import asbool
-from ckan.common import g
+from ckan.common import g, config
 from ckanext.discourse.interfaces import IDiscourse
+
+from discourse_api import DiscourseApi
+
+import ckan.lib.jobs as jobs
 
 import logging
 
 log = logging.getLogger(__name__)
 
+get_action = logic.get_action
 
 class DiscoursePlugin(plugins.SingletonPlugin):
     """
@@ -24,6 +30,7 @@ class DiscoursePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurable)
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
+    plugins.implements(plugins.IPackageController, inherit=True)
 
     def configure(self, config):
         """
@@ -35,6 +42,9 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         discourse_count_cache_age = config.get('discourse.count_cache_age', 60)
         discourse_ckan_category = config.get('discourse.ckan_category', None)
         discourse_debug = asbool(config.get('discourse.debug', False))
+        discourse_api_key = config.get('discourse.api_key', '')
+        discourse_category_id = config.get('discourse.category_id', '')
+        discourse_metadata_fields = config.get('discourse.metadata_fields', '').split()
 
         if discourse_url is None:
             log.warn("No discourse forum name is set. Please set \
@@ -67,6 +77,14 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         self.__class__.active_conversations = 0
         self.__class__.discourse_sync()
 
+        self.discourse_category_id = discourse_category_id
+        self.discourse_metadata_fields = discourse_metadata_fields
+
+        self.discourse_api = DiscourseApi(
+            discourse_url,
+            discourse_username,
+            discourse_api_key
+        )
 
     # IConfigurer
     def update_config(self, config_):
@@ -208,3 +226,129 @@ class DiscoursePlugin(plugins.SingletonPlugin):
                 'discourse_comments_count' : self.discourse_comments_count,
                 'discourse_sync' : self.discourse_sync,
                 'discourse_category_url' : self.discourse_category_url}
+
+    # IPackageController
+
+    # After a dataset is created a new topic in discourse should be made with dataset metadata
+    def after_create(self, context, pkg_dict):
+        if not pkg_dict.get('private'):
+            jobs.enqueue(self.create_discourse_topic, [pkg_dict])
+        return
+
+    # After a dataset is updated the first post in the discourse topic should be updated with new dataset metadata
+    def after_update(self, context, pkg_dict):
+        if not pkg_dict.get('private'):
+            jobs.enqueue(self.update_discourse_topic, [pkg_dict])
+        return
+
+    def create_discourse_topic(self, pkg_dict):
+        title = pkg_dict.get('title')
+        raw = self.create_topic_raw(pkg_dict)
+        log.info('Create discourse topic: {0}'.format(title))
+        self.discourse_api.create_topic(title, raw, self.discourse_category_id)
+        return
+
+    def update_discourse_topic(self, pkg_dict):
+        topic_list = self.discourse_api.get_topic_list(self.discourse_category_id)
+        for topic in topic_list:
+            if topic.get('title') == pkg_dict.get('title'):
+                topic_id = topic.get('id')
+                topic_posts = self.discourse_api.get_topic_posts(topic_id)
+                raw = self.create_topic_raw(pkg_dict)
+                for post in topic_posts:
+                    if post.get('post_number') == 1:
+                        cooked = post.get('cooked', '').replace(' rel="nofollow noopener"', '')
+                        if cooked != raw:
+                            log.info('Update discourse topic post: {0}'.format(topic.get('title')))
+                            self.discourse_api.update_post(post.get('id'), raw)
+                        break
+                break
+        return
+
+    # Create the raw html used in posts
+    def create_topic_raw(self, pkg_dict):
+        full_package = get_action('package_show')({}, {'id': pkg_dict.get('id')})
+        organization = full_package.get('organization', {})
+        groups = full_package.get('groups', [])
+        tags = full_package.get('tags', [])
+        resources = full_package.get('resources', {})
+
+        title = pkg_dict.get('title') or pkg_dict['name']
+        site_url = config.get('ckan.site_url')
+        pkg_url = '{0}/dataset/{1}'.format(site_url, pkg_dict['name'].encode("utf-8"))
+
+        raw = '<h2>{0}</h2>'.format(title.encode("utf-8"))
+
+        if pkg_dict.get('notes'):
+            raw += '<p>{0}</p>'.format(pkg_dict.get('notes').encode("utf-8"))
+
+        raw += '<p>'
+        # Add organization title to raw
+        if organization.get('title'):
+            raw += '<strong>Publisher</strong>: {0}<br>'.format(organization.get('title').encode("utf-8"))
+
+        # Get metadata for fields defined in ini config and use display labels
+        if self.discourse_metadata_fields:
+            schema_fields = self.get_schema_fields()
+            for field in self.discourse_metadata_fields:
+                if pkg_dict.get(field):
+                    label = field
+                    for item in schema_fields:
+                        if item.get('field_name') == field:
+                            label = item.get('label')
+                            break
+                    raw += '<strong>{0}</strong>: {1}<br>'.format(label, pkg_dict.get(field).encode("utf-8"))
+        raw += '</p>'
+
+        raw += '<p>'
+        if groups:
+            group_list = []
+            for group in groups:
+                if group.get('title') not in group_list:
+                    group_list.append(group.get('title'))
+            group_alias = str(config.get('ckan.group_alias', 'Group'))
+            raw += '<strong>{0}</strong>: {1}<br>'.format(group_alias, ', '.join(group_list).encode("utf-8"))
+
+        if tags:
+            tag_list = []
+            for tag in tags:
+                if tag.get('name') not in tag_list:
+                    tag_list.append(tag.get('name'))
+            raw += '<strong>Tags</strong>: {0}'.format(', '.join(tag_list).encode("utf-8"))
+        raw += '</p>'
+
+        raw += '<p>See this dataset on the Data Portal:<br><a href="{0}">{0}</a></p>'.format(pkg_url)
+
+        if resources:
+            raw += '<p>Included resources:<br>'
+            for res in resources:
+                if res.get('id'):
+                    res_url = '{0}/resource/{1}'.format(pkg_url, res.get('id'))
+                    raw += '<a href="{0}">{1}</a><br>'.format(res_url, res.get('name', 'Unnamed resource').encode("utf-8"))
+            raw += '</p>'
+
+        return raw
+
+    # Get the display labels for metadata fields
+    # Custom schemas will have different labels
+    def get_schema_fields(self):
+        try:
+            schema_fields = get_action('scheming_dataset_schema_show')({},{'type':'dataset'})
+            return schema_fields['dataset_fields']
+        except:
+            schema_fields = [
+                {"field_name": "title", "label": "Title"},
+                {"field_name": "name", "label": "Dataset ID"},
+                {"field_name": "notes", "label": "Description"},
+                {"field_name": "tag_string", "label": "Tags"},
+                {"field_name": "license_id", "label": "License"},
+                {"field_name": "owner_org", "label": "Organization"},
+                {"field_name": "group", "label": "Groups"},
+                {"field_name": "url", "label": "Source"},
+                {"field_name": "version", "label": "Version"},
+                {"field_name": "author", "label": "Author"},
+                {"field_name": "author_email", "label": "Author Email"},
+                {"field_name": "maintainer", "label": "Maintainer"},
+                {"field_name": "maintainer_email", "label": "Maintainer Email"}
+            ]
+        return schema_fields
