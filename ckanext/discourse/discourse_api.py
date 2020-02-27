@@ -6,6 +6,8 @@ import logging
 
 log = logging.getLogger(__name__)
 
+requests.packages.urllib3.disable_warnings()
+
 class DiscourseApi():
     def __init__(self, host, username, api_key):
         self.host = host
@@ -57,11 +59,14 @@ class DiscourseApi():
         data_dict['api_username'] = self.username
         data_dict['api_key'] = self.api_key
 
+        headers = {'Content-Type': 'multipart/form-data;'}
+
         response = requests.request(
             method,
             url,
             data = data_dict,
-            headers = {'Content-Type': 'multipart/form-data;'}
+            headers = headers,
+            verify = False
         )
 
         try:
