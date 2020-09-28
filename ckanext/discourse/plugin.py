@@ -58,8 +58,13 @@ class DiscoursePlugin(plugins.SingletonPlugin):
 
         # check for valid JSON
         try:
-            discourse_api = discourse_url + discourse_ckan_category + '.json'
-            r = requests.get(discourse_api, verify=False)
+            category_url = discourse_url + discourse_ckan_category + '.json'
+            headers = {
+                'Content-Type': 'multipart/form-data;',
+                'Api-Key': discourse_api_key,
+                'Api-Username': discourse_username
+            }
+            r = requests.get(category_url, headers=headers, verify=False)
             test_category_dict = r.json()
         except:
             log.warn(discourse_api + " is not a valid Discourse JSON endpoint!")
@@ -106,7 +111,13 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         topic_lookup_dict = dict()
 
         try:
-            r = requests.get(cls.discourse_url + cls.discourse_ckan_category + '.json', verify=False)
+            category_url = cls.discourse_url + cls.discourse_ckan_category + '.json'
+            headers = {
+                'Content-Type': 'multipart/form-data;',
+                'Api-Key': cls.discourse_api_key,
+                'Api-Username': cls.discourse_username
+            }
+            r = requests.get(category_url, headers=headers, verify=False)
             category_dict = r.json()
             topics_dict = category_dict['topic_list']['topics']
             cls.active_conversations = 0
@@ -120,7 +131,12 @@ class DiscoursePlugin(plugins.SingletonPlugin):
             while 'more_topics_url' in category_dict['topic_list']:
                 more_url = cls.discourse_url + category_dict['topic_list']['more_topics_url']
                 more_url = more_url.replace("?category_id", ".json?category_id")
-                r = requests.get(more_url, verify=False)
+                headers = {
+                    'Content-Type': 'multipart/form-data;',
+                    'Api-Key': cls.discourse_api_key,
+                    'Api-Username': cls.discourse_username
+                }
+                r = requests.get(more_url, headers=headers, verify=False)
                 category_dict = r.json()
                 topics_dict = category_dict['topic_list']['topics']
 

@@ -56,10 +56,11 @@ class DiscourseApi():
 
         url = self.host + path
 
-        data_dict['api_username'] = self.username
-        data_dict['api_key'] = self.api_key
-
-        headers = {'Content-Type': 'multipart/form-data;'}
+        headers = {
+            'Content-Type': 'multipart/form-data;',
+            'Api-Key': self.api_key,
+            'Api-Username': self.username
+        }
 
         response = requests.request(
             method,
