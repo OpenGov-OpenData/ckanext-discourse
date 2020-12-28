@@ -57,8 +57,8 @@ class DiscoursePlugin(plugins.SingletonPlugin):
             'discourse.ckan_category' in your .ini!")
 
         # check for valid JSON
+        category_url = discourse_url + discourse_ckan_category + '.json'
         try:
-            category_url = discourse_url + discourse_ckan_category + '.json'
             headers = {
                 'Content-Type': 'multipart/form-data;',
                 'Api-Key': discourse_api_key,
@@ -67,7 +67,7 @@ class DiscoursePlugin(plugins.SingletonPlugin):
             r = requests.get(category_url, headers=headers, verify=False)
             test_category_dict = r.json()
         except:
-            log.warn(discourse_api + " is not a valid Discourse JSON endpoint!")
+            log.warn(category_url + " is not a valid Discourse JSON endpoint!")
 
         config['pylons.app_globals'].has_commenting = True
 
