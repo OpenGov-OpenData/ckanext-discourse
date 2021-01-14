@@ -7,6 +7,7 @@ import logging
 log = logging.getLogger(__name__)
 
 requests.packages.urllib3.disable_warnings()
+REQUEST_TIMEOUT = 5
 
 class DiscourseApi():
     def __init__(self, host, username, api_key):
@@ -61,19 +62,22 @@ class DiscourseApi():
             'Api-Key': self.api_key,
             'Api-Username': self.username
         }
-
-        response = requests.request(
-            method,
-            url,
-            data = data_dict,
-            headers = headers,
-            verify = False
-        )
-
+        json_response = {}
         try:
+            response = requests.request(
+                method,
+                url,
+                data = data_dict,
+                headers = headers,
+                timeout=REQUEST_TIMEOUT,
+                verify = False
+            )
             json_response = response.json()
+        except requests.exceptions.HTTPError as error:
+            log.debug('HTTP error: {}'.format(error))
+        except requests.exceptions.Timeout:
+            log.warn('URL time out for {0} after {1}s'.format(category_url, REQUEST_TIMEOUT))
         except Exception as e:
             log.error(e)
-            return
 
         return json_response

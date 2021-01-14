@@ -22,6 +22,9 @@ log = logging.getLogger(__name__)
 
 get_action = logic.get_action
 
+REQUEST_TIMEOUT = 5
+
+
 class DiscoursePlugin(plugins.SingletonPlugin):
     """
     Insert javascript fragments into package pages and the home page to
@@ -47,27 +50,40 @@ class DiscoursePlugin(plugins.SingletonPlugin):
         discourse_metadata_fields = config.get('discourse.metadata_fields', '').split()
 
         if discourse_url is None:
-            log.warn("No discourse forum name is set. Please set \
-            'discourse.url' in your .ini!")
+            log.warn(
+                "No discourse forum url is configured. "
+                "Please set 'discourse.url' in the ini!"
+            )
         else:
             discourse_url = discourse_url.rstrip('/') + '/'
 
         if discourse_ckan_category is None:
-            log.warn("Discourse needs discourse.ckan_category set to work. Please set \
-            'discourse.ckan_category' in your .ini!")
+            log.warn(
+                "No discourse.ckan_category is configured. "
+                "Please set 'discourse.ckan_category' in the ini!"
+            )
 
         # check for valid JSON
-        category_url = discourse_url + discourse_ckan_category + '.json'
         try:
+            category_url = discourse_url + discourse_ckan_category + '.json'
             headers = {
                 'Content-Type': 'multipart/form-data;',
                 'Api-Key': discourse_api_key,
                 'Api-Username': discourse_username
             }
-            r = requests.get(category_url, headers=headers, verify=False)
+            r = requests.get(
+                category_url,
+                headers=headers,
+                timeout=REQUEST_TIMEOUT,
+                verify=False
+            )
             test_category_dict = r.json()
+        except requests.exceptions.HTTPError as error:
+            log.debug('HTTP error: {}'.format(error))
+        except requests.exceptions.Timeout:
+            log.warn('URL time out for {0} after {1}s'.format(category_url, REQUEST_TIMEOUT))
         except:
-            log.warn(category_url + " is not a valid Discourse JSON endpoint!")
+            log.warn("Invalid Discourse JSON endpoint!")
 
         config['pylons.app_globals'].has_commenting = True
 
